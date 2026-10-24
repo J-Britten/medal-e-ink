@@ -22,6 +22,7 @@ def cmd_show(args):
             src,
             rotate=args.rotate,
             fit=args.fit,
+            window_mm=args.window_mm,
             saturation=args.saturation,
             contrast=args.contrast,
             dither=not args.no_dither,
@@ -61,6 +62,13 @@ def build_parser():
         choices=("cover", "contain"),
         default="cover",
         help="cover: crop to fill (default); contain: letterbox with white bars",
+    )
+    show.add_argument(
+        "--window-mm",
+        type=float,
+        default=image.FRAME_WINDOW_MM,
+        help="width of the frame opening, centred on the panel "
+        "(default %(default)s mm; 160 = whole panel)",
     )
     show.add_argument("--saturation", type=float, default=1.2)
     show.add_argument("--contrast", type=float, default=1.0)

@@ -15,6 +15,18 @@ PALETTE = [
     ((0, 255, 0), epd.GREEN),
 ]
 
+# Physical pixel pitch of the panel (160 mm active width / 800 px).
+PIXEL_PITCH_MM = 0.2
+# Width of the picture frame's opening, centred on the panel, full height visible.
+FRAME_WINDOW_MM = 110.85
+
+
+def window_width_px(window_mm):
+    """Visible width in panel pixels (rounded to even so it centres exactly)."""
+    px = round(window_mm / PIXEL_PITCH_MM / 2) * 2
+    return max(2, min(epd.WIDTH, px))
+
+
 # Palette index -> panel code. Unused indices fall back to white.
 _CODE_LUT = np.full(256, epd.WHITE, dtype=np.uint8)
 _CODE_LUT[: len(PALETTE)] = [code for _, code in PALETTE]
@@ -33,6 +45,7 @@ def prepare(
     *,
     rotate=0,
     fit="cover",
+    window_mm=FRAME_WINDOW_MM,
     background=(255, 255, 255),
     saturation=1.2,
     contrast=1.0,
@@ -40,18 +53,21 @@ def prepare(
 ):
     """Return a palettised image of exactly panel size (800x480).
 
+    The picture is fitted into the visible window (window_mm wide, centred,
+    full panel height); the hidden strips left and right stay `background`.
+
     rotate: how the panel is mounted, in degrees clockwise (0, 90, 180, 270).
-            With 90/270 the picture is composed as 480x800 portrait.
-    fit:    "cover" crops to fill the screen, "contain" letterboxes.
+            With 90/270 the picture is composed in portrait.
+    fit:    "cover" crops to fill the window, "contain" letterboxes.
     """
     if rotate not in (0, 90, 180, 270):
         raise ValueError("rotate must be 0, 90, 180 or 270")
 
     img = ImageOps.exif_transpose(img).convert("RGB")
 
-    size = (epd.WIDTH, epd.HEIGHT)
-    if rotate in (90, 270):
-        size = (epd.HEIGHT, epd.WIDTH)
+    # Window size in panel coordinates, then as the viewer sees it.
+    window = (window_width_px(window_mm), epd.HEIGHT)
+    size = window[::-1] if rotate in (90, 270) else window
 
     if fit == "cover":
         img = ImageOps.fit(img, size, Image.Resampling.LANCZOS)
@@ -69,6 +85,11 @@ def prepare(
     if rotate:
         # PIL rotates counter-clockwise; undo the clockwise mounting rotation.
         img = img.rotate(rotate, expand=True)
+
+    if img.size != (epd.WIDTH, epd.HEIGHT):
+        canvas = Image.new("RGB", (epd.WIDTH, epd.HEIGHT), background)
+        canvas.paste(img, ((epd.WIDTH - img.width) // 2, (epd.HEIGHT - img.height) // 2))
+        img = canvas
 
     mode = Image.Dither.FLOYDSTEINBERG if dither else Image.Dither.NONE
     return img.quantize(palette=_palette_image(), dither=mode)

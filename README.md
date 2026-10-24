@@ -20,6 +20,10 @@ Plug the Waveshare HAT onto the Pi's 40-pin header, or wire the driver board to 
 | BUSY    | GPIO 24          |
 | PWR     | GPIO 18          |
 
+### Frame window
+
+The panel sits behind a frame whose opening is 110.85 mm wide and the full panel height. The panel has 0.2 mm pixels, so the visible area is the centre 554 × 480 pixels (columns 123 to 676). Pictures are cropped to that window. The hidden strips on the left and right are left white.
+
 ## Install on the Pi
 
 On Raspberry Pi OS Lite:
@@ -64,7 +68,8 @@ python3 -m photoframe show photo.jpg --preview preview.png
 | Option         | Default | Meaning                                                                 |
 |----------------|---------|-------------------------------------------------------------------------|
 | `--rotate`     | `0`     | How the panel is mounted, in degrees clockwise. Use 90 or 270 for portrait. |
-| `--fit`        | `cover` | `cover` crops the picture to fill the screen. `contain` adds white bars. |
+| `--fit`        | `cover` | `cover` crops the picture to fill the window. `contain` adds white bars. |
+| `--window-mm`  | `110.85`| Width of the frame opening, centred on the panel. Use `160` for the whole panel. |
 | `--saturation` | `1.2`   | Color boost applied before dithering. The panel's inks are muted.        |
 | `--contrast`   | `1.0`   | Contrast adjustment.                                                    |
 | `--no-dither`  | off     | Map each pixel to the nearest color without dithering.                  |
