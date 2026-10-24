@@ -1,0 +1,4 @@
+#!/bin/sh
+# Entry point: runs the photoframe package from this repo checkout.
+REPO_DIR="$(dirname "$(readlink -f "$0")")/.."
+exec env PYTHONPATH="$REPO_DIR${PYTHONPATH:+:$PYTHONPATH}" python3 -m photoframe "$@"
