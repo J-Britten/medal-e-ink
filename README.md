@@ -49,6 +49,7 @@ sudo reboot          # only if the script asks for it
 photoframe show ~/pictures/holiday.jpg
 photoframe show photo.jpg --rotate 90          # frame mounted in portrait
 photoframe show photo.jpg --fit contain        # letterbox instead of crop
+photoframe show portrait.jpg --align top       # keep the top of a tall picture
 photoframe show photo.jpg --saturation 1.5     # punchier colors
 photoframe clear                               # white screen
 ```
@@ -69,6 +70,7 @@ python3 -m photoframe show photo.jpg --preview preview.png
 |----------------|---------|-------------------------------------------------------------------------|
 | `--rotate`     | `0`     | How the panel is mounted, in degrees clockwise. Use 90 or 270 for portrait. |
 | `--fit`        | `cover` | `cover` crops the picture to fill the window. `contain` adds white bars. |
+| `--align`      | `center`| Which part of the picture to keep when cropping: `top`, `bottom`, `left`, `right`, combinations like `top-left`, or fractions `x,y` from 0 to 1 (e.g. `0.5,0.3`). With `contain`, it positions the picture in the window. |
 | `--window-mm`  | `110.85`| Width of the frame opening, centred on the panel. Use `160` for the whole panel. |
 | `--saturation` | `1.2`   | Color boost applied before dithering. The panel's inks are muted.        |
 | `--contrast`   | `1.0`   | Contrast adjustment.                                                    |

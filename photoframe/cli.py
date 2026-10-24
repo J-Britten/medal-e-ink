@@ -22,6 +22,7 @@ def cmd_show(args):
             src,
             rotate=args.rotate,
             fit=args.fit,
+            align=image.parse_align(args.align),
             window_mm=args.window_mm,
             saturation=args.saturation,
             contrast=args.contrast,
@@ -62,6 +63,13 @@ def build_parser():
         choices=("cover", "contain"),
         default="cover",
         help="cover: crop to fill (default); contain: letterbox with white bars",
+    )
+    show.add_argument(
+        "--align",
+        default="center",
+        help="which part of the picture to keep when cropping: center, top, "
+        "bottom, left, right, combinations like top-left, or 'x,y' fractions "
+        "(0 = left/top, 1 = right/bottom), e.g. 0.5,0.3",
     )
     show.add_argument(
         "--window-mm",

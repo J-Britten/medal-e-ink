@@ -27,6 +27,41 @@ def window_width_px(window_mm):
     return max(2, min(epd.WIDTH, px))
 
 
+_ALIGN_WORDS = {
+    "left": (0.0, None),
+    "right": (1.0, None),
+    "top": (None, 0.0),
+    "bottom": (None, 1.0),
+    "center": (None, None),
+}
+
+
+def parse_align(spec):
+    """Parse an alignment into PIL centering fractions (x, y), 0 = left/top.
+
+    Accepts words ("top", "bottom-left", "center", ...) or numbers "x,y"
+    with each value between 0 and 1. Unspecified axes stay centred.
+    """
+    spec = spec.strip().lower()
+    if "," in spec:
+        try:
+            x, y = (float(v) for v in spec.split(","))
+        except ValueError:
+            raise ValueError(f"invalid alignment {spec!r}, expected 'x,y'") from None
+        if not (0 <= x <= 1 and 0 <= y <= 1):
+            raise ValueError("alignment values must be between 0 and 1")
+        return (x, y)
+
+    x = y = 0.5
+    for word in spec.replace("_", "-").split("-"):
+        if word not in _ALIGN_WORDS:
+            raise ValueError(f"invalid alignment word {word!r}")
+        wx, wy = _ALIGN_WORDS[word]
+        x = x if wx is None else wx
+        y = y if wy is None else wy
+    return (x, y)
+
+
 # Palette index -> panel code. Unused indices fall back to white.
 _CODE_LUT = np.full(256, epd.WHITE, dtype=np.uint8)
 _CODE_LUT[: len(PALETTE)] = [code for _, code in PALETTE]
@@ -45,6 +80,7 @@ def prepare(
     *,
     rotate=0,
     fit="cover",
+    align=(0.5, 0.5),
     window_mm=FRAME_WINDOW_MM,
     background=(255, 255, 255),
     saturation=1.2,
@@ -59,6 +95,9 @@ def prepare(
     rotate: how the panel is mounted, in degrees clockwise (0, 90, 180, 270).
             With 90/270 the picture is composed in portrait.
     fit:    "cover" crops to fill the window, "contain" letterboxes.
+    align:  (x, y) fractions, 0 = left/top, as seen by the viewer. With
+            "cover" it picks which part of the picture is kept; with
+            "contain" it places the picture inside the window.
     """
     if rotate not in (0, 90, 180, 270):
         raise ValueError("rotate must be 0, 90, 180 or 270")
@@ -70,9 +109,11 @@ def prepare(
     size = window[::-1] if rotate in (90, 270) else window
 
     if fit == "cover":
-        img = ImageOps.fit(img, size, Image.Resampling.LANCZOS)
+        img = ImageOps.fit(img, size, Image.Resampling.LANCZOS, centering=align)
     elif fit == "contain":
-        img = ImageOps.pad(img, size, Image.Resampling.LANCZOS, color=background)
+        img = ImageOps.pad(
+            img, size, Image.Resampling.LANCZOS, color=background, centering=align
+        )
     else:
         raise ValueError("fit must be 'cover' or 'contain'")
 
